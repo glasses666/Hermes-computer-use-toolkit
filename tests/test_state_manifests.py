@@ -1,5 +1,6 @@
 import json
 
+from computer_use_toolkit.state import manifests as manifest_state
 from computer_use_toolkit.state.manifests import find_pending_session_manifest, list_pending_session_manifests, pending_action_identity
 from computer_use_toolkit.state.session_store import InvalidSessionID, session_manifest_path, session_state_root, validate_session_id
 
@@ -60,6 +61,69 @@ def test_list_pending_session_manifests_filters_malformed_and_mismatched_payload
         "app_session_id": "app-good",
         "pending_pointer_action": {"action_id": "ptr-1", "action_type": "click"},
     }]
+
+
+
+def test_list_pending_session_manifests_rejects_symlinked_manifest_that_escapes_root(tmp_path):
+    root = session_state_root(tmp_path)
+    root.mkdir(parents=True, exist_ok=True)
+    outside = tmp_path / "outside-manifest.json"
+    outside.write_text(
+        json.dumps(
+            {
+                "app_session_id": "app-link",
+                "pending_pointer_action": {"action_id": "ptr-link", "action_type": "click"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (root / "app-link.json").symlink_to(outside)
+
+    assert list_pending_session_manifests(root) == []
+
+
+
+def test_list_pending_session_manifests_reads_resolved_path_after_symlink_check(tmp_path, monkeypatch):
+    root = session_state_root(tmp_path)
+    root.mkdir(parents=True, exist_ok=True)
+    inside = root / "inside.json"
+    inside.write_text(
+        json.dumps(
+            {
+                "app_session_id": "inside",
+                "pending_pointer_action": {"action_id": "ptr-inside", "action_type": "click"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    outside = tmp_path / "outside-manifest.json"
+    outside.write_text(
+        json.dumps(
+            {
+                "app_session_id": "app-link",
+                "pending_pointer_action": {"action_id": "ptr-link", "action_type": "click"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    link = root / "app-link.json"
+    link.symlink_to(inside)
+
+    original_load_manifest = manifest_state.load_manifest
+
+    def swapping_load_manifest(path):
+        link.unlink()
+        link.symlink_to(outside)
+        return original_load_manifest(path)
+
+    monkeypatch.setattr(manifest_state, "load_manifest", swapping_load_manifest)
+
+    assert list_pending_session_manifests(root) == [
+        {
+            "app_session_id": "inside",
+            "pending_pointer_action": {"action_id": "ptr-inside", "action_type": "click"},
+        }
+    ]
 
 
 

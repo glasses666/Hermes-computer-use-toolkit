@@ -8,6 +8,19 @@ from .session_store import session_manifest_path, validate_session_id
 
 
 
+def _manifest_resolves_within_root(path: str | Path, root: str | Path) -> Path | None:
+    candidate = Path(path)
+    root_path = Path(root).expanduser().resolve()
+    try:
+        resolved = candidate.resolve(strict=True)
+    except Exception:
+        return None
+    if resolved.parent != root_path or resolved.suffix != ".json":
+        return None
+    return resolved
+
+
+
 def pending_action_identity(payload: dict[str, Any]) -> tuple[str, str] | None:
     pending = payload.get("pending_pointer_action")
     if not isinstance(pending, dict):
@@ -38,7 +51,10 @@ def list_pending_session_manifests(root: str | Path) -> list[dict[str, Any]]:
         return []
     discovered: list[dict[str, Any]] = []
     for path in sorted(root_path.glob("*.json")):
-        payload = load_manifest(path)
+        resolved_path = _manifest_resolves_within_root(path, root_path)
+        if resolved_path is None:
+            continue
+        payload = load_manifest(resolved_path)
         if not payload:
             continue
         app_session_id = str(payload.get("app_session_id") or "").strip()
