@@ -128,7 +128,9 @@ def report_pending_action_result(
     cursor = updated_session.get("virtual_cursor")
     if not isinstance(cursor, dict):
         cursor = _fresh_virtual_cursor()
-        updated_session["virtual_cursor"] = cursor
+    else:
+        cursor = {**_fresh_virtual_cursor(), **cursor}
+    updated_session["virtual_cursor"] = cursor
     if x is not None:
         cursor["x"] = x
     if y is not None:

@@ -168,7 +168,12 @@ def test_report_pending_action_result_clears_pending_and_records_result():
     assert result["session"]["pending_pointer_action"] is None
     assert result["session"]["pending_pointer_claim_token"] == ""
     assert result["session"]["last_pointer_action_result"] == result["result"]
-    assert result["session"]["virtual_cursor"] == {"x": 40, "y": 50}
+    assert result["session"]["virtual_cursor"] == {
+        "x": 40,
+        "y": 50,
+        "detached": True,
+        "visible": True,
+    }
     assert session["pending_pointer_action"]["action_id"] == "ptr-1"
     assert session["pending_pointer_claim_token"] == "claim-1"
     assert session["virtual_cursor"] == {"x": 1, "y": 2}
@@ -244,6 +249,39 @@ def test_report_pending_action_result_rehydrates_missing_virtual_cursor_flags_so
         claim_token="claim-1",
     )
     session["virtual_cursor"] = None
+
+    result = report_pending_action_result(
+        session,
+        action_id="ptr-1",
+        status="completed",
+        claim_token="claim-1",
+        now=now,
+        x=15,
+        y=25,
+    )
+
+    assert result["success"] is True
+    assert result["session"]["virtual_cursor"] == {
+        "x": 15,
+        "y": 25,
+        "detached": True,
+        "visible": True,
+    }
+
+
+
+def test_report_pending_action_result_rehydrates_partial_virtual_cursor_shape_source_parity():
+    now = datetime(2026, 4, 23, 15, 30, tzinfo=timezone.utc)
+    session = _session(
+        pending_action={
+            "action_id": "ptr-1",
+            "action_type": "click",
+            "claimed_by": "worker-1",
+            "claim_expires_at": (now + timedelta(seconds=30)).isoformat(),
+        },
+        claim_token="claim-1",
+        virtual_cursor={},
+    )
 
     result = report_pending_action_result(
         session,
