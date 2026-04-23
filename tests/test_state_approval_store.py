@@ -79,3 +79,32 @@ def test_load_approval_entries_treats_nested_bundle_metadata_as_missing(tmp_path
     assert load_approval_entries(path) == [
         {"approval_name": "Safari", "bundle_id": "", "bundle_path": ""}
     ]
+
+
+
+def test_load_approval_entries_falls_back_to_app_name_when_approval_name_shape_is_bad(tmp_path):
+    path = approval_store_path(tmp_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "approved_app_entries": [
+                    {
+                        "approval_name": {"nested": "bad"},
+                        "app_name": "Safari",
+                        "bundle_id": "com.apple.Safari",
+                        "bundle_path": "/Applications/Safari.app",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert load_approval_entries(path) == [
+        {
+            "approval_name": "Safari",
+            "bundle_id": "com.apple.Safari",
+            "bundle_path": "/Applications/Safari.app",
+        }
+    ]

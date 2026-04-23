@@ -21,13 +21,22 @@ def _normalize_text(value: Any) -> str:
 
 
 
+def _first_normalized_text(*values: Any) -> str:
+    for value in values:
+        normalized = _normalize_text(value)
+        if normalized:
+            return normalized
+    return ""
+
+
+
 def normalize_approval_entry(raw_entry: Any) -> dict[str, str] | None:
     if isinstance(raw_entry, str):
         name = _normalize_text(raw_entry)
         return {"approval_name": name, "bundle_id": "", "bundle_path": ""} if name else None
     if not isinstance(raw_entry, dict):
         return None
-    name = _normalize_text(raw_entry.get("approval_name") or raw_entry.get("app_name") or raw_entry.get("label"))
+    name = _first_normalized_text(raw_entry.get("approval_name"), raw_entry.get("app_name"), raw_entry.get("label"))
     bundle_id = _normalize_text(raw_entry.get("bundle_id"))
     bundle_path = _normalize_text(raw_entry.get("bundle_path"))
     if not any([name, bundle_id, bundle_path]):
