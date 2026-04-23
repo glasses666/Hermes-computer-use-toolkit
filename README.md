@@ -15,6 +15,7 @@ This repo currently publishes:
   - pending-action identity parsing
   - approval-store normalization / legacy fallback loading
   - queue payload construction
+  - queue claim/report state transitions
   - worker-side requested-action selection
 - compatibility-oriented tests for those extracted helpers
 
@@ -49,11 +50,13 @@ src/computer_use_toolkit/
     session_store.py
   queue/
     actions.py
+    claims.py
   worker/
     service.py
 tests/
   test_contract_smoke.py
   test_queue_actions.py
+  test_queue_claims.py
   test_state_approval_store.py
   test_state_manifests.py
   test_worker_service.py
@@ -73,10 +76,12 @@ python3 -m py_compile \
   src/computer_use_toolkit/state/session_store.py \
   src/computer_use_toolkit/queue/__init__.py \
   src/computer_use_toolkit/queue/actions.py \
+  src/computer_use_toolkit/queue/claims.py \
   src/computer_use_toolkit/worker/__init__.py \
   src/computer_use_toolkit/worker/service.py \
   tests/test_contract_smoke.py \
   tests/test_queue_actions.py \
+  tests/test_queue_claims.py \
   tests/test_state_approval_store.py \
   tests/test_state_manifests.py \
   tests/test_worker_service.py
