@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import uuid
 from typing import Any
 
@@ -26,3 +27,12 @@ def payload_action_identity(payload: dict[str, Any]) -> tuple[str, str] | None:
     if not action_id or not action_type:
         return None
     return action_id, action_type
+
+
+
+def record_pending_pointer_action(session: dict[str, Any], action_type: str, **fields: Any) -> dict[str, Any]:
+    updated_session = deepcopy(session)
+    updated_session["pending_pointer_action"] = build_pending_pointer_action(action_type, **fields)
+    updated_session["pending_pointer_claim_token"] = ""
+    updated_session["last_pointer_action_result"] = None
+    return updated_session
