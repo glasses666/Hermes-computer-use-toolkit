@@ -15,7 +15,9 @@ def approval_store_path(hermes_home: str | Path) -> Path:
 
 
 def _normalize_text(value: Any) -> str:
-    return str(value or "").strip()
+    if isinstance(value, str):
+        return value.strip()
+    return ""
 
 
 
