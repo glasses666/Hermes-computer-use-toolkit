@@ -30,13 +30,14 @@ The full production implementation still lives in the Hermes branch while extrac
 
 This repo is the clean external home the rest of that logic will move into.
 
-## Frozen contract docs
+## Frozen contract and execution docs
 
 - `docs/contract-v1.md`
 - `docs/extraction-seams.md`
 - `docs/source-checkpoint.md`
+- `docs/migration-execution-plan.md`
 
-These three documents are the boundary line for future extraction work.
+These documents are the boundary line for future extraction work and the local execution map for the next small migration slices.
 
 ## Package layout
 
@@ -89,9 +90,9 @@ python3 -m py_compile \
 
 ## Immediate next extraction lanes
 
-1. move more manifest/session logic over without changing behavior
-2. extract queue claim/report helpers
-3. extract worker execution and IPC
-4. move MCP facade last, once lower layers are stable
+1. Promote the pure worker backlog-selection seam into toolkit `main` (`worker_pending_backlog` in `src/computer_use_toolkit/worker/service.py`) using the red/green plan in `docs/migration-execution-plan.md`.
+2. Keep Hermes integration separate: add the Hermes regression first, then replace only the duplicated worker-selection helper after toolkit tests pass.
+3. Extract worker execution and IPC after worker selection is import-stable.
+4. Move MCP facade last, once lower layers are stable and Hermes black-box compatibility smokes still pass.
 
-The point of publishing this early is to make the line of work visible and divisible before afternoon multi-agent execution starts.
+The point of publishing this early is to make the line of work visible and divisible before multi-agent execution starts.
