@@ -1,4 +1,4 @@
-from computer_use_toolkit.worker.service import prioritize_pending_actions, requested_pending_actions
+from computer_use_toolkit.worker.service import prioritize_pending_actions, requested_pending_actions, worker_pending_backlog
 
 
 
@@ -7,6 +7,16 @@ def _pending(app_session_id, action_id, action_type="click"):
         "app_session_id": app_session_id,
         "pending_pointer_action": {"action_id": action_id, "action_type": action_type},
     }
+
+
+
+def test_worker_pending_backlog_uses_valid_manifest_backlog_before_adapter_fallback():
+    malformed_manifest = {"app_session_id": "app-manifest-bad", "pending_pointer_action": {"action_id": "ptr-bad"}}
+    valid_manifest = _pending("app-manifest", "ptr-manifest", action_type="scroll")
+    adapter_pending = [_pending("app-adapter", "ptr-adapter")]
+
+    assert worker_pending_backlog([malformed_manifest, valid_manifest], adapter_pending) == [valid_manifest]
+    assert worker_pending_backlog([malformed_manifest], adapter_pending) == adapter_pending
 
 
 

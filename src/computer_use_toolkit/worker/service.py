@@ -6,6 +6,21 @@ from computer_use_toolkit.state.manifests import pending_action_identity
 
 
 
+def worker_pending_backlog(
+    manifest_backlog: list[dict[str, Any]],
+    adapter_backlog: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    usable_manifest_backlog = [
+        session
+        for session in manifest_backlog
+        if isinstance(session, dict) and pending_action_identity(session) is not None
+    ]
+    if usable_manifest_backlog:
+        return usable_manifest_backlog
+    return list(adapter_backlog)
+
+
+
 def prioritize_pending_actions(
     pending_actions: list[dict[str, Any]],
     *,
